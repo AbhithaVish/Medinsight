@@ -1,18 +1,23 @@
-const jwt = require('jsonwebtoken');
-require('dotenv').config();
+// backend/authMiddleware.js
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
 
-function authMiddleware(req, res, next) {
-  const auth = req.headers.authorization;
-  if (!auth) return res.status(401).json({ error: 'missing_authorization' });
-  const token = auth.split(' ')[1];
-  if (!token) return res.status(401).json({ error: 'invalid_token' });
+const JWT_SECRET = process.env.JWT_SECRET || "CHANGE_THIS_SECRET";
+
+module.exports = function (req, res, next) {
+  // debug log (remove or reduce in production)
+  console.log("[authMiddleware] Authorization header:", req.headers.authorization);
+
+  const authHeader = req.headers.authorization || "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  if (!token) return res.status(401).json({ error: "no_token" });
+
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    next();
+    const payload = jwt.verify(token, JWT_SECRET);
+    req.user = { id: payload.id, email: payload.email, role: payload.role };
+    return next();
   } catch (err) {
-    return res.status(401).json({ error: 'invalid_token' });
+    console.error("[authMiddleware] token verify failed:", err && err.message ? err.message : err);
+    return res.status(401).json({ error: "invalid_token" });
   }
-}
-
-module.exports = authMiddleware;
+};
