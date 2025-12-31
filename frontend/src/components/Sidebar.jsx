@@ -9,16 +9,23 @@ export default function Sidebar() {
     <aside className="sidebar">
       <h2 className="logo">MediInsight</h2>
 
+      {/* ================= USER ================= */}
       {user?.role === "USER" && (
         <>
           <Link to="/dashboard">Dashboard</Link>
-           <Link to="/cart">Cart</Link>
+          <Link to="/cart">Cart</Link>
           <Link to="/products">All Products</Link>
           <Link to="/orders">My Orders</Link>
           <Link to="/profile">Profile</Link>
+
+          {/* 🏥 NEW: Hospital Assistants */}
+          <Link to="/assistants"> Hospital Assistants  </Link>
+          <Link to="/consultants">Consultants</Link>
+
         </>
       )}
 
+      {/* ================= SHOP OWNER ================= */}
       {user?.role === "SHOP_OWNER" && (
         <>
           <Link to="/owner/dashboard">Dashboard</Link>
@@ -29,12 +36,15 @@ export default function Sidebar() {
         </>
       )}
 
+      {/* ================= ADMIN ================= */}
       {user?.role === "ADMIN" && (
         <>
           <Link to="/admin/dashboard">Dashboard</Link>
           <Link to="/admin/shops">Manage Shops</Link>
         </>
       )}
+
+      
 
       <button className="logout" onClick={logout}>
         Logout

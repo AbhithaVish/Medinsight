@@ -28,8 +28,10 @@ app.use("/api/admin", require("./routes/admin.routes"));
 
 app.use("/api/admin/shops", require("./routes/adminShop.routes"));
 
+app.use("/api/assistants", require("./routes/assistant.routes"));
 
+app.use("/api/consultants", require("./routes/consultant.routes"));
 
-
+app.use("/api/consultants/auth", require("./routes/consultantAuth.routes"));
 
 module.exports = app;

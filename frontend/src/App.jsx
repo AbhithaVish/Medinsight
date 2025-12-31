@@ -1,14 +1,13 @@
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
-
 import Navbar from "./components/Navbar";
 
-// AUTH
+/* ================= AUTH ================= */
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 
-// USER
+/* ================= USER ================= */
 import Shops from "./pages/user/Shops";
 import Products from "./pages/user/Products";
 import AllProducts from "./pages/user/AllProducts";
@@ -17,34 +16,45 @@ import Orders from "./pages/user/Orders";
 import Profile from "./pages/user/Profile";
 import UserDashboard from "./pages/user/UserDashboard";
 
-// OWNER
+/* ================= OWNER ================= */
 import MyShop from "./pages/owner/MyShop";
 import AddProduct from "./pages/owner/AddProduct";
 import MyProducts from "./pages/owner/MyProducts";
 import OrderManagement from "./pages/owner/OrderManagement";
 import OwnerDashboard from "./pages/owner/OwnerDashboard";
 
-// ADMIN
+/* ================= ADMIN ================= */
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ManageShops from "./pages/admin/ManageShops";
 
-/* ---------------- ROUTES WITH LAYOUT CONTROL ---------------- */
+/* ================= ASSISTANT ================= */
+import AssistantLogin from "./pages/assistants/AssistantLogin";
+import AssistantRegister from "./pages/assistants/AssistantRegister";
+import AssistantDashboard from "./pages/assistants/AssistantDashboard";
+import AssistantProfile from "./pages/assistants/AssistantProfile";
+import AssistantPublicList from "./pages/assistants/AssistantPublicList";
+
+/* ================= CONSULTANT ================= */
+import ConsultantLogin from "./pages/consultants/ConsultantLogin";
+import ConsultantRegister from "./pages/consultants/ConsultantRegister";
+import ConsultantDashboard from "./pages/consultants/ConsultantDashboard";
+import ConsultantProfile from "./pages/consultants/ConsultantProfile";
+import ConsultantPublicList from "./pages/consultants/ConsultantPublicList";
+
+/* ================= ROUTES ================= */
 
 function AppRoutes() {
   const location = useLocation();
 
-  // ❌ Hide Navbar on dashboards
+  /* 🔐 Hide navbar on ALL dashboards + assistant + consultant pages */
   const hideNavbar =
-  location.pathname.startsWith("/login") ||
-  location.pathname.startsWith("/register") ||
-  location.pathname.startsWith("/dashboard") ||
-  location.pathname.startsWith("/owner") ||
-  location.pathname.startsWith("/products") ||
-  location.pathname.startsWith("/profile") ||
-  location.pathname.startsWith("/orders") ||
-  location.pathname.startsWith("/cart") ||
-  location.pathname.startsWith("/admin");
-
+    location.pathname.startsWith("/login") ||
+    location.pathname.startsWith("/register") ||
+    location.pathname.startsWith("/dashboard") ||
+    location.pathname.startsWith("/owner") ||
+    location.pathname.startsWith("/admin") ||
+    location.pathname.startsWith("/assistants") ||
+    location.pathname.startsWith("/consultants");
 
   return (
     <>
@@ -69,7 +79,6 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/cart"
           element={
@@ -78,7 +87,6 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/orders"
           element={
@@ -87,7 +95,6 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/profile"
           element={
@@ -106,7 +113,6 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/owner/shop"
           element={
@@ -115,7 +121,6 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/owner/add-product"
           element={
@@ -124,7 +129,6 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/owner/products"
           element={
@@ -133,7 +137,6 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/owner/orders"
           element={
@@ -152,7 +155,6 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/admin/shops"
           element={
@@ -161,12 +163,54 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
+        {/* ---------- ASSISTANTS ---------- */}
+        <Route path="/assistants" element={<AssistantPublicList />} />
+        <Route path="/assistants/login" element={<AssistantLogin />} />
+        <Route path="/assistants/register" element={<AssistantRegister />} />
+        <Route
+          path="/assistants/dashboard"
+          element={
+            <ProtectedRoute role="ASSISTANT">
+              <AssistantDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/assistants/profile"
+          element={
+            <ProtectedRoute role="ASSISTANT">
+              <AssistantProfile />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ---------- CONSULTANTS ---------- */}
+        <Route path="/consultants" element={<ConsultantPublicList />} />
+        <Route path="/consultants/login" element={<ConsultantLogin />} />
+        <Route path="/consultants/register" element={<ConsultantRegister />} />
+        <Route
+          path="/consultants/dashboard"
+          element={
+            <ProtectedRoute role="CONSULTANT">
+              <ConsultantDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/consultants/profile"
+          element={
+            <ProtectedRoute role="CONSULTANT">
+              <ConsultantProfile />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </>
   );
 }
 
-/* ---------------- ROOT APP ---------------- */
+/* ================= ROOT ================= */
 
 export default function App() {
   return (

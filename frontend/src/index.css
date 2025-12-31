@@ -54,6 +54,25 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+.btn-primary {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid #2563eb;
+  color: #2563eb;
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
