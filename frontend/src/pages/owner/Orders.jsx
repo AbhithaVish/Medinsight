@@ -11,9 +11,13 @@ export default function OwnerOrders() {
     setItems(res.data);
   };
 
-  useEffect(() => {
-    loadOrders();
-  }, []);
+ useEffect(() => {
+  const fetchData = async () => {
+    await loadOrders();
+  };
+
+  fetchData();
+}, []);
 
   const updateStatus = async (id, status) => {
     await api.put(`/owner/orders/item/${id}/status`, { status });

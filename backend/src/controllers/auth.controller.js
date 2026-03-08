@@ -8,7 +8,7 @@ exports.register = async (req, res) => {
 
     const hashed = await bcrypt.hash(password, 10);
 
-    const user = await User.create({
+    await User.create({
       name,
       email,
       password: hashed,
@@ -16,6 +16,7 @@ exports.register = async (req, res) => {
     });
 
     res.status(201).json({ message: "User registered" });
+
   } catch (err) {
     console.error("REGISTER ERROR:", err);
     res.status(500).json({ message: "Registration failed" });
@@ -24,13 +25,18 @@ exports.register = async (req, res) => {
 
 
 exports.login = async (req, res) => {
+
   const { email, password } = req.body;
 
   const user = await User.findOne({ where: { email } });
-  if (!user) return res.status(404).json({ message: "User not found" });
+
+  if (!user)
+    return res.status(404).json({ message: "User not found" });
 
   const match = await bcrypt.compare(password, user.password);
-  if (!match) return res.status(401).json({ message: "Invalid credentials" });
+
+  if (!match)
+    return res.status(401).json({ message: "Invalid credentials" });
 
   const token = jwt.sign(
     { id: user.id, role: user.role },
@@ -38,15 +44,48 @@ exports.login = async (req, res) => {
     { expiresIn: "1d" }
   );
 
-  res.json({ token, role: user.role });
+  res.json({
+    token,
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role
+    }
+  });
 };
 
+
 exports.me = async (req, res) => {
+
   res.json({
     id: req.user.id,
     name: req.user.name,
     email: req.user.email,
     role: req.user.role
   });
+
 };
 
+
+/* ---------- UPDATE PROFILE ---------- */
+
+exports.updateMe = async (req, res) => {
+
+  const user = await User.findByPk(req.user.id);
+
+  if (!user)
+    return res.status(404).json({ message: "User not found" });
+
+  user.name = req.body.name ?? user.name;
+
+  await user.save();
+
+  res.json({
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role
+  });
+
+};

@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axios";
-import DashboardLayout from "../../components/DashboardLayout";
+import DashboardLayout from "../../components/AssistantDashboardLayout";
+import "./AssistantProfile.css";
 
 export default function AssistantProfile() {
+
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -17,6 +19,7 @@ export default function AssistantProfile() {
   const [saving, setSaving] = useState(false);
 
   /* ================= LOAD PROFILE ================= */
+
   useEffect(() => {
     api.get("/assistants/me")
       .then(res => {
@@ -36,8 +39,10 @@ export default function AssistantProfile() {
   }, []);
 
   /* ================= UPDATE PROFILE ================= */
+
   const saveProfile = async () => {
     setSaving(true);
+
     try {
       await api.put("/assistants/me", form);
       alert("Profile updated successfully");
@@ -48,114 +53,141 @@ export default function AssistantProfile() {
     }
   };
 
-  if (loading) return <p style={{ padding: 30 }}>Loading profile...</p>;
+  if (loading) return <p className="profile-loading">Loading profile...</p>;
 
   return (
     <DashboardLayout title="My Assistant Profile">
-      <div
-        style={{
-          maxWidth: 750,
-          background: "#ffffff",
-          padding: 30,
-          borderRadius: 18,
-          boxShadow: "0 15px 40px rgba(0,0,0,0.08)"
-        }}
-      >
-        <h2 style={{ marginBottom: 20 }}>Profile Details</h2>
 
-        {/* ===== BASIC DETAILS ===== */}
-        <div className="grid-2">
-          <input
-            placeholder="Full Name"
-            value={form.name}
-            onChange={e => setForm({ ...form, name: e.target.value })}
-          />
+      <div className="profile-container">
 
-          <input value={form.email} disabled />
+        {/* ===== PROFILE HEADER ===== */}
+
+        <div className="profile-header">
+
+          <div className="profile-avatar">
+            {form.name ? form.name.charAt(0).toUpperCase() : "A"}
+          </div>
+
+          <div>
+            <h2>{form.name || "Assistant"}</h2>
+            <p className="profile-email">{form.email}</p>
+          </div>
+
         </div>
 
-        <div className="grid-2">
-          <input
-            placeholder="Phone Number"
-            value={form.phone}
-            onChange={e => setForm({ ...form, phone: e.target.value })}
-          />
+        {/* ===== BASIC INFO CARD ===== */}
 
-          <input
-            type="number"
-            placeholder="Years of Experience"
-            value={form.experience_years}
+        <div className="profile-card">
+
+          <h3>Basic Information</h3>
+
+          <div className="profile-grid">
+
+            <div className="form-group">
+              <label>Full Name</label>
+              <input
+                value={form.name}
+                onChange={e =>
+                  setForm({ ...form, name: e.target.value })
+                }
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Email</label>
+              <input value={form.email} disabled />
+            </div>
+
+            <div className="form-group">
+              <label>Phone</label>
+              <input
+                value={form.phone}
+                onChange={e =>
+                  setForm({ ...form, phone: e.target.value })
+                }
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Experience (years)</label>
+              <input
+                type="number"
+                value={form.experience_years}
+                onChange={e =>
+                  setForm({ ...form, experience_years: e.target.value })
+                }
+              />
+            </div>
+
+            <div className="form-group full">
+              <label>Hourly Rate (Rs.)</label>
+              <input
+                type="number"
+                value={form.hourly_rate}
+                onChange={e =>
+                  setForm({ ...form, hourly_rate: e.target.value })
+                }
+              />
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* ===== BIO CARD ===== */}
+
+        <div className="profile-card">
+
+          <h3>Professional Bio</h3>
+
+          <textarea
+            rows={4}
+            placeholder="Describe your experience, care skills, certifications..."
+            value={form.bio}
             onChange={e =>
-              setForm({ ...form, experience_years: e.target.value })
+              setForm({ ...form, bio: e.target.value })
             }
           />
+
         </div>
 
-        <input
-          type="number"
-          placeholder="Hourly Rate (Rs.)"
-          value={form.hourly_rate}
-          onChange={e =>
-            setForm({ ...form, hourly_rate: e.target.value })
-          }
-          style={{ width: "100%", marginTop: 12 }}
-        />
+        {/* ===== HOSPITALS CARD ===== */}
 
-        <textarea
-          placeholder="Bio (skills, background, care experience)"
-          rows={4}
-          value={form.bio}
-          onChange={e => setForm({ ...form, bio: e.target.value })}
-          style={{ width: "100%", marginTop: 15 }}
-        />
+        <div className="profile-card">
 
-        {/* ===== HOSPITALS ===== */}
-        <div style={{ marginTop: 25 }}>
           <h3>Working Hospitals</h3>
 
           {hospitals.length === 0 && (
-            <p style={{ color: "#64748b" }}>
+            <p className="empty-hospital">
               Hospitals added during registration
             </p>
           )}
 
           {hospitals.map((h, i) => (
-            <div
-              key={i}
-              style={{
-                marginTop: 10,
-                padding: 12,
-                borderRadius: 12,
-                background: "#f8fafc",
-                border: "1px solid #e5e7eb"
-              }}
-            >
+            <div key={i} className="hospital-card">
               <strong>{h.hospital_name}</strong>
-              <p style={{ margin: "4px 0", color: "#64748b" }}>
-                📍 {h.location}
-              </p>
+              <p>📍 {h.location}</p>
             </div>
           ))}
+
         </div>
 
         {/* ===== SAVE BUTTON ===== */}
-        <button
-          onClick={saveProfile}
-          disabled={saving}
-          style={{
-            marginTop: 30,
-            padding: "14px 22px",
-            background: "#2563eb",
-            color: "#fff",
-            border: "none",
-            borderRadius: 14,
-            fontSize: 16,
-            cursor: "pointer"
-          }}
-        >
-          {saving ? "Saving..." : "Save Profile"}
-        </button>
+
+        <div className="profile-actions">
+
+          <button
+            className="save-btn"
+            onClick={saveProfile}
+            disabled={saving}
+          >
+            {saving ? "Saving..." : "Save Changes"}
+          </button>
+
+        </div>
+
       </div>
+
     </DashboardLayout>
   );
 }

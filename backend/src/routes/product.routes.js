@@ -1,20 +1,17 @@
 const router = require("express").Router();
 const auth = require("../middleware/auth.middleware");
 const role = require("../middleware/role.middleware");
-const upload = require("../middleware/upload.middleware"); // ✅ ONLY ONE
+const upload = require("../middleware/upload.middleware");
 const controller = require("../controllers/product.controller");
 
 // ---------------- PUBLIC ----------------
 router.get("/", controller.getAllProducts);
+router.get("/shop/:shopId", controller.getProductsByShop);
 
-router.get(
-  "/shop/:shopId",
-  controller.getProductsByShop
-);
+// ---------------- RECOMMENDATIONS ----------------
+router.post("/recommendations", controller.getRecommendedProducts);
 
 // ---------------- SHOP OWNER ----------------
-
-// Get my products
 router.get(
   "/my",
   auth,
@@ -22,7 +19,6 @@ router.get(
   controller.getMyProducts
 );
 
-// Add product (with optional image)
 router.post(
   "/",
   auth,
@@ -31,7 +27,6 @@ router.post(
   controller.createProduct
 );
 
-// Update product (no image here)
 router.put(
   "/:id",
   auth,
@@ -39,7 +34,6 @@ router.put(
   controller.updateProduct
 );
 
-// Upload / change product image
 router.post(
   "/:id/image",
   auth,
@@ -48,7 +42,6 @@ router.post(
   controller.uploadProductImage
 );
 
-// Delete product
 router.delete(
   "/:id",
   auth,

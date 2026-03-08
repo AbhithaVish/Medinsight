@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Navbar from "./components/Navbar";
@@ -9,12 +10,16 @@ import Register from "./pages/auth/Register";
 
 /* ================= USER ================= */
 import Shops from "./pages/user/Shops";
-import Products from "./pages/user/Products";
 import AllProducts from "./pages/user/AllProducts";
 import Cart from "./pages/user/Cart";
 import Orders from "./pages/user/Orders";
 import Profile from "./pages/user/Profile";
 import UserDashboard from "./pages/user/UserDashboard";
+import XrayAnalysis from "./pages/ai/XrayAnalysis";
+import Products from "./pages/user/Products";
+import Success from "./pages/user/Success";
+
+
 
 /* ================= OWNER ================= */
 import MyShop from "./pages/owner/MyShop";
@@ -26,6 +31,7 @@ import OwnerDashboard from "./pages/owner/OwnerDashboard";
 /* ================= ADMIN ================= */
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ManageShops from "./pages/admin/ManageShops";
+import ManageOrders from "./pages/admin/ManageOrders";
 
 /* ================= ASSISTANT ================= */
 import AssistantLogin from "./pages/assistants/AssistantLogin";
@@ -74,7 +80,7 @@ function AppRoutes() {
         <Route
           path="/dashboard"
           element={
-            <ProtectedRoute role="USER">
+            <ProtectedRoute>
               <UserDashboard />
             </ProtectedRoute>
           }
@@ -103,6 +109,29 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
+        <Route path="/success" element={<Success />} />
+
+        <Route
+          path="/ai-xray"
+          element={
+            <ProtectedRoute role="USER">
+              <XrayAnalysis />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route 
+          path="/shops" 
+          element={
+            <Shops />
+        } />
+
+        <Route 
+          path="/shop/:id" 
+          element={
+          <Products />
+        } />
 
         {/* ---------- SHOP OWNER ---------- */}
         <Route
@@ -163,6 +192,11 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
+        <Route 
+            path="/admin/orders" 
+            element={<ManageOrders
+         />} />
 
         {/* ---------- ASSISTANTS ---------- */}
         <Route path="/assistants" element={<AssistantPublicList />} />

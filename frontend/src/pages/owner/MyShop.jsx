@@ -3,15 +3,27 @@ import api from "../../api/axios";
 import DashboardLayout from "../../components/DashboardLayout";
 
 export default function MyShop() {
+
   const [shop, setShop] = useState(null);
-  const [form, setForm] = useState({ name: "", description: "" });
   const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
+
+  const [form, setForm] = useState({
+    name: "",
+    description: ""
+  });
+
+  /* ================= LOAD SHOP ================= */
 
   const loadShop = async () => {
     try {
       const res = await api.get("/shops/me");
       setShop(res.data);
-    } catch (err) {
+      setForm({
+        name: res.data.name,
+        description: res.data.description || ""
+      });
+    } catch {
       setShop(null);
     } finally {
       setLoading(false);
@@ -22,98 +34,247 @@ export default function MyShop() {
     loadShop();
   }, []);
 
-  const createShop = async () => {
-    if (!form.name.trim()) {
-      alert("Shop name required");
-      return;
-    }
+  /* ================= CREATE ================= */
 
-    try {
-      await api.post("/shops", form);
-      alert("Shop created. Await admin approval.");
-      loadShop();
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to create shop");
-    }
+  const createShop = async () => {
+    if (!form.name.trim())
+      return alert("Shop name required");
+
+    await api.post("/shops", form);
+    alert("Shop created successfully ✅");
+    loadShop();
   };
+
+  /* ================= UPDATE ================= */
+
+  const updateShop = async () => {
+    await api.put("/shops/me", form);
+
+    alert("Shop updated ✅");
+    setEditing(false);
+    loadShop();
+  };
+
+  /* ================= STATUS STYLE ================= */
+
+  const statusStyle = status => ({
+    padding: "6px 14px",
+    borderRadius: "999px",
+    fontWeight: "600",
+    background:
+      status === "APPROVED"
+        ? "#dcfce7"
+        : status === "BLOCKED"
+        ? "#fee2e2"
+        : "#fef9c3",
+    color:
+      status === "APPROVED"
+        ? "#166534"
+        : status === "BLOCKED"
+        ? "#991b1b"
+        : "#92400e"
+  });
 
   return (
     <DashboardLayout title="My Shop">
+
       {loading && <p>Loading...</p>}
 
-      {/* ---------------- EXISTING SHOP ---------------- */}
+      {/* ================= SHOP EXISTS ================= */}
       {shop && (
-        <div className="card">
-          <h2>{shop.name}</h2>
-          <p>{shop.description || "No description provided"}</p>
 
-          <p>
-            <strong>Status:</strong>{" "}
-            <span
-              style={{
-                padding: "4px 10px",
-                borderRadius: "20px",
-                background:
-                  shop.status === "APPROVED"
-                    ? "#dcfce7"
-                    : shop.status === "BLOCKED"
-                    ? "#fee2e2"
-                    : "#fef9c3",
-                color:
-                  shop.status === "APPROVED"
-                    ? "#166534"
-                    : shop.status === "BLOCKED"
-                    ? "#991b1b"
-                    : "#92400e"
-              }}
-            >
-              {shop.status}
-            </span>
-          </p>
+        <div style={styles.shopCard}>
 
-          {shop.status === "PENDING" && (
-            <p style={{ marginTop: "10px", color: "#92400e" }}>
-              ⏳ Waiting for admin approval
+          {/* HEADER */}
+          <div style={styles.header}>
+            <div>
+              <h2>{shop.name}</h2>
+              <span style={statusStyle(shop.status)}>
+                {shop.status}
+              </span>
+            </div>
+
+            {!editing && (
+              <button
+                style={styles.editBtn}
+                onClick={() => setEditing(true)}
+              >
+                Edit Shop
+              </button>
+            )}
+          </div>
+
+
+          {/* ================= VIEW MODE ================= */}
+          {!editing && (
+            <p style={{marginTop:15}}>
+              {shop.description || "No description added"}
             </p>
           )}
 
-          {shop.status === "BLOCKED" && (
-            <p style={{ marginTop: "10px", color: "#991b1b" }}>
-              🚫 Shop blocked by admin
-            </p>
+
+          {/* ================= EDIT MODE ================= */}
+          {editing && (
+            <div style={styles.form}>
+
+              <input
+                value={form.name}
+                onChange={e =>
+                  setForm({...form,name:e.target.value})
+                }
+                placeholder="Shop Name"
+                style={styles.input}
+              />
+
+              <textarea
+                rows={4}
+                value={form.description}
+                onChange={e =>
+                  setForm({...form,description:e.target.value})
+                }
+                placeholder="Description"
+                style={styles.input}
+              />
+
+              <div style={{display:"flex",gap:"10px"}}>
+                <button
+                  style={styles.saveBtn}
+                  onClick={updateShop}
+                >
+                  Save Changes
+                </button>
+
+                <button
+                  style={styles.cancelBtn}
+                  onClick={()=>setEditing(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+
+            </div>
           )}
+
         </div>
       )}
 
-      {/* ---------------- CREATE SHOP ---------------- */}
+
+      {/* ================= CREATE SHOP ================= */}
       {!shop && !loading && (
-        <div className="card" style={{ maxWidth: "500px" }}>
-          <h2>Create My Shop</h2>
+
+        <div style={styles.createCard}>
+
+          <h2>Create Your Store</h2>
 
           <input
             placeholder="Shop Name"
+            style={styles.input}
             value={form.name}
             onChange={e =>
-              setForm({ ...form, name: e.target.value })
+              setForm({...form,name:e.target.value})
             }
-            style={{ width: "100%", marginBottom: "10px" }}
           />
 
           <textarea
-            placeholder="Description"
+            rows={4}
+            placeholder="Shop Description"
+            style={styles.input}
             value={form.description}
             onChange={e =>
-              setForm({ ...form, description: e.target.value })
+              setForm({...form,description:e.target.value})
             }
-            rows={4}
-            style={{ width: "100%", marginBottom: "10px" }}
           />
 
-          <button onClick={createShop}>
+          <button
+            style={styles.createBtn}
+            onClick={createShop}
+          >
             Create Shop
           </button>
+
         </div>
       )}
+
     </DashboardLayout>
   );
 }
+
+
+/* ================= STYLES ================= */
+
+const styles = {
+
+  shopCard:{
+    background:"#fff",
+    padding:"30px",
+    borderRadius:"16px",
+    boxShadow:"0 15px 35px rgba(0,0,0,0.05)",
+    maxWidth:"700px"
+  },
+
+  header:{
+    display:"flex",
+    justifyContent:"space-between",
+    alignItems:"center"
+  },
+
+  form:{
+    marginTop:"20px",
+    display:"flex",
+    flexDirection:"column",
+    gap:"12px"
+  },
+
+  input:{
+    width:"100%",
+    padding:"12px",
+    borderRadius:"8px",
+    border:"1px solid #e2e8f0"
+  },
+
+  editBtn:{
+    background:"#2563eb",
+    color:"#fff",
+    border:"none",
+    padding:"8px 16px",
+    borderRadius:"8px",
+    cursor:"pointer"
+  },
+
+  saveBtn:{
+    background:"#16a34a",
+    color:"#fff",
+    border:"none",
+    padding:"10px 18px",
+    borderRadius:"8px",
+    cursor:"pointer"
+  },
+
+  cancelBtn:{
+    background:"#e2e8f0",
+    border:"none",
+    padding:"10px 18px",
+    borderRadius:"8px",
+    cursor:"pointer"
+  },
+
+  createCard:{
+    background:"#fff",
+    padding:"30px",
+    borderRadius:"16px",
+    boxShadow:"0 15px 35px rgba(0,0,0,0.05)",
+    maxWidth:"600px",
+    display:"flex",
+    flexDirection:"column",
+    gap:"12px"
+  },
+
+  createBtn:{
+    background:"#2563eb",
+    color:"#fff",
+    border:"none",
+    padding:"12px",
+    borderRadius:"10px",
+    cursor:"pointer"
+  }
+};

@@ -1,202 +1,242 @@
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { CartContext } from "../../context/CartContext";
-import api from "../../api/axios";
-import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../../context/AuthContext";
+import api, { BASE_URL } from "../../api/axios";
 import DashboardLayout from "../../components/DashboardLayout";
+import "./Cart.css";
 
 export default function Cart() {
-  const { cart, updateQty, removeItem, clearCart } = useContext(CartContext);
-  const navigate = useNavigate();
 
-  const total = cart.reduce(
-    (sum, item) => sum + item.price * item.qty,
-    0
-  );
+  const { cart, updateQty, removeItem } = useContext(CartContext);
+  const { user } = useContext(AuthContext);
+
+  const userId =
+    user?.id ||
+    user?._id ||
+    user?.userId ||
+    user?.user?.id ||
+    "Not available";
+
+  const [loading, setLoading] = useState(false);
+  const [alert, setAlert] = useState(null);
+
+  const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+
+  const handleAlert = (type, message) => {
+    setAlert({ type, message });
+    setTimeout(() => setAlert(null), 4000);
+  };
 
   const checkout = async () => {
-    if (!cart.length) return alert("Cart is empty");
 
-    const cartItems = cart.map(item => ({
-      product_id: item.id,
-      qty: item.qty,
-      price: item.price
-    }));
+    // 🚨 Prevent duplicate checkout calls
+    if (loading) return;
 
-    await api.post("/orders", { cartItems });
-    clearCart();
-    navigate("/orders");
+    if (!cart.length) {
+      handleAlert("error", "Your cart is currently empty.");
+      return;
+    }
+
+    try {
+
+      setLoading(true);
+
+      const { data } = await api.post("/payments/create-checkout-session", {
+        cartItems: cart.map(item => ({
+          id: item.id,
+          qty: item.qty
+        })),
+        userId: user?.id
+      });
+
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error("Stripe session creation failed.");
+      }
+
+    } catch (error) {
+
+      const errorMsg =
+        error.response?.data?.message ||
+        "Payment initialization failed.";
+
+      handleAlert("error", errorMsg);
+
+      setLoading(false);
+
+    }
+
   };
 
   return (
-    <DashboardLayout title="Shopping Cart">
-      {!cart.length ? (
+    <DashboardLayout title="Your Shopping Cart">
+
+      <div className="cart-container">
+
+        {/* Logged user debug */}
         <div
           style={{
-            background: "#fff",
-            padding: "40px",
-            borderRadius: "16px",
-            textAlign: "center",
-            color: "#6b7280"
+            background: "#eef2ff",
+            padding: "10px",
+            borderRadius: "8px",
+            marginBottom: "15px",
+            fontSize: "14px"
           }}
         >
-          🛒 Your cart is empty
+          Logged User ID: <strong>{userId}</strong>
         </div>
-      ) : (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "2fr 1fr",
-            gap: "24px"
-          }}
-        >
-          {/* ---------------- CART ITEMS ---------------- */}
-          <div>
-            {cart.map(item => (
-              <div
-                key={item.id}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  background: "#fff",
-                  padding: "16px",
-                  borderRadius: "14px",
-                  marginBottom: "12px",
-                  boxShadow: "0 6px 16px rgba(0,0,0,0.05)"
-                }}
-              >
-                {/* PRODUCT INFO */}
-                <div style={{ flex: 2 }}>
-                  <h4 style={{ margin: 0 }}>{item.name}</h4>
-                  <p style={{ margin: "6px 0", color: "#6b7280" }}>
-                    Rs. {item.price}
-                  </p>
-                </div>
 
-                {/* QTY CONTROLS */}
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "10px"
-                  }}
-                >
-                  <button
-                    onClick={() =>
-                      updateQty(item.id, Math.max(1, item.qty - 1))
-                    }
-                    style={qtyBtn}
-                  >
-                    −
-                  </button>
-
-                  <span style={{ minWidth: 24, textAlign: "center" }}>
-                    {item.qty}
-                  </span>
-
-                  <button
-                    onClick={() => updateQty(item.id, item.qty + 1)}
-                    style={qtyBtn}
-                  >
-                    +
-                  </button>
-                </div>
-
-                {/* ITEM TOTAL */}
-                <div style={{ flex: 1, textAlign: "right" }}>
-                  <p style={{ margin: 0, fontWeight: 600 }}>
-                    Rs. {(item.price * item.qty).toFixed(2)}
-                  </p>
-                </div>
-
-                {/* REMOVE */}
-                <button
-                  onClick={() => removeItem(item.id)}
-                  style={removeBtn}
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
+        {/* ALERT */}
+        {alert && (
+          <div className={`custom-alert ${alert.type}`}>
+            <span>{alert.message}</span>
+            <button onClick={() => setAlert(null)}>✕</button>
           </div>
+        )}
 
-          {/* ---------------- ORDER SUMMARY ---------------- */}
-          <div
-            style={{
-              background: "#fff",
-              padding: "20px",
-              borderRadius: "16px",
-              height: "fit-content",
-              boxShadow: "0 8px 24px rgba(0,0,0,0.06)"
-            }}
-          >
-            <h3>Order Summary</h3>
+        {!cart.length ? (
 
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                marginBottom: "10px"
-              }}
-            >
-              <span>Items</span>
-              <span>{cart.length}</span>
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                marginBottom: "14px"
-              }}
-            >
-              <span>Total</span>
-              <span style={{ fontWeight: 600 }}>
-                Rs. {total.toFixed(2)}
-              </span>
-            </div>
+          <div className="empty-state">
+            <div className="empty-icon">🛒</div>
+            <h3>Your cart is empty</h3>
+            <p>Looks like you haven't added anything yet.</p>
 
             <button
-              onClick={checkout}
-              style={{
-                width: "100%",
-                padding: "12px",
-                borderRadius: "12px",
-                background: "#2563eb",
-                color: "#fff",
-                border: "none",
-                fontSize: "16px",
-                fontWeight: 600
-              }}
+              className="continue-btn"
+              onClick={() => window.history.back()}
             >
-              Place Order
+              Continue Shopping
             </button>
           </div>
-        </div>
-      )}
+
+        ) : (
+
+          <div className="cart-grid">
+
+            {/* ITEMS */}
+            <div className="items-column">
+
+              <div className="column-header">
+                <span>{cart.length} Items in your cart</span>
+              </div>
+
+              {cart.map(item => (
+
+                <div key={item.id} className="cart-item-card">
+
+                  <div className="item-image">
+                    <img
+                      src={
+                        item.image
+                          ? `${BASE_URL}/${item.image}`
+                          : "https://via.placeholder.com/80"
+                      }
+                      alt={item.name}
+                    />
+                  </div>
+
+                  <div className="item-details">
+                    <h4>{item.name}</h4>
+                    <p className="item-price">
+                      Rs. {item.price.toLocaleString()}
+                    </p>
+                  </div>
+
+                  <div className="qty-controls">
+
+                    <button
+                      onClick={() =>
+                        updateQty(item.id, Math.max(1, item.qty - 1))
+                      }
+                      disabled={loading}
+                    >
+                      −
+                    </button>
+
+                    <span>{item.qty}</span>
+
+                    <button
+                      onClick={() =>
+                        updateQty(item.id, item.qty + 1)
+                      }
+                      disabled={loading}
+                    >
+                      +
+                    </button>
+
+                  </div>
+
+                  <div className="item-subtotal">
+                    <p>
+                      Rs. {(item.price * item.qty).toLocaleString()}
+                    </p>
+                  </div>
+
+                  <button
+                    className="remove-item-btn"
+                    onClick={() => removeItem(item.id)}
+                    disabled={loading}
+                  >
+                    ✕
+                  </button>
+
+                </div>
+
+              ))}
+
+            </div>
+
+            {/* SUMMARY */}
+            <div className="summary-column">
+
+              <div className="summary-card">
+
+                <h3>Order Summary</h3>
+
+                <div className="summary-line">
+                  <span>Subtotal</span>
+                  <span>Rs. {total.toLocaleString()}</span>
+                </div>
+
+                <div className="summary-line">
+                  <span>Shipping</span>
+                  <span className="free-text">FREE</span>
+                </div>
+
+                <hr />
+
+                <div className="summary-total">
+                  <span>Estimated Total</span>
+                  <span>Rs. {total.toLocaleString()}</span>
+                </div>
+
+                {/* CHECKOUT BUTTON */}
+
+                <button
+                  className={`checkout-btn ${loading ? "loading" : ""}`}
+                  onClick={checkout}
+                  disabled={loading}
+                >
+                  {loading
+                    ? <span className="spinner"></span>
+                    : "Proceed to Checkout"}
+                </button>
+
+                <p className="secure-text">
+                  🔒 Secure Checkout Powered by Stripe
+                </p>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        )}
+
+      </div>
+
     </DashboardLayout>
   );
 }
-
-/* ---------- STYLES ---------- */
-
-const qtyBtn = {
-  width: 32,
-  height: 32,
-  borderRadius: 8,
-  border: "1px solid #d1d5db",
-  background: "#f9fafb",
-  cursor: "pointer",
-  fontSize: 18
-};
-
-const removeBtn = {
-  marginLeft: 12,
-  background: "#ef4444",
-  color: "#fff",
-  border: "none",
-  borderRadius: "50%",
-  width: 32,
-  height: 32,
-  cursor: "pointer"
-};

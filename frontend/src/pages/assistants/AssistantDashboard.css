@@ -1,0 +1,95 @@
+.assistant-dashboard{
+  padding: 10px 0 30px 0;
+}
+
+/* loading */
+
+.dashboard-loading{
+  color:#64748b;
+  font-size:15px;
+}
+
+/* stats */
+
+.stats-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:22px;
+  margin-bottom:35px;
+}
+
+.stat-card{
+  background:white;
+  padding:22px;
+  border-radius:16px;
+  box-shadow:0 15px 35px rgba(0,0,0,0.06);
+  transition:all .2s ease;
+}
+
+.stat-card:hover{
+  transform:translateY(-4px);
+}
+
+.stat-title{
+  color:#64748b;
+  font-size:14px;
+  margin-bottom:6px;
+}
+
+.stat-value{
+  font-size:24px;
+  font-weight:600;
+  margin:0;
+  color:#0f172a;
+}
+
+/* status colors */
+
+.stat-card.green .stat-value{
+  color:#16a34a;
+}
+
+.stat-card.red .stat-value{
+  color:#dc2626;
+}
+
+/* actions */
+
+.actions-container{
+  display:flex;
+  flex-wrap:wrap;
+  gap:14px;
+}
+
+.dashboard-btn{
+  padding:12px 22px;
+  border:none;
+  border-radius:12px;
+  font-size:15px;
+  cursor:pointer;
+  color:white;
+  transition:.2s;
+}
+
+/* button colors */
+
+.dashboard-btn.primary{
+  background:#2563eb;
+}
+
+.dashboard-btn.success{
+  background:#22c55e;
+}
+
+.dashboard-btn.danger{
+  background:#ef4444;
+}
+
+.dashboard-btn.info{
+  background:#0ea5e9;
+}
+
+.dashboard-btn:hover{
+  transform:translateY(-2px);
+  opacity:.9;
+}

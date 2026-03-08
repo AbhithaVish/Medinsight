@@ -1,7 +1,8 @@
 const Product = require("../models/Product");
 const Shop = require("../models/Shop");
+const { Op } = require("sequelize");
 
-// ---------------- CREATE PRODUCT (WITH IMAGE) ----------------
+// ---------------- CREATE PRODUCT ----------------
 exports.createProduct = async (req, res) => {
   try {
     const shop = await Shop.findOne({
@@ -26,19 +27,25 @@ exports.createProduct = async (req, res) => {
     });
 
     res.status(201).json(product);
+
   } catch (error) {
     console.error("CREATE PRODUCT ERROR:", error);
     res.status(500).json({ message: "Failed to create product" });
   }
 };
 
-// ---------------- GET PRODUCTS BY SHOP (PUBLIC) ----------------
+// ---------------- GET PRODUCTS BY SHOP ----------------
 exports.getProductsByShop = async (req, res) => {
-  const products = await Product.findAll({
-    where: { shop_id: req.params.shopId }
-  });
+  try {
+    const products = await Product.findAll({
+      where: { shop_id: req.params.shopId }
+    });
 
-  res.json(products);
+    res.json(products);
+
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch products" });
+  }
 };
 
 // ---------------- UPDATE PRODUCT ----------------
@@ -74,7 +81,7 @@ exports.deleteProduct = async (req, res) => {
   res.json({ message: "Product deleted" });
 };
 
-// ---------------- UPLOAD / CHANGE PRODUCT IMAGE ----------------
+// ---------------- UPLOAD PRODUCT IMAGE ----------------
 exports.uploadProductImage = async (req, res) => {
   const product = await Product.findByPk(req.params.id);
 
@@ -102,21 +109,63 @@ exports.getMyProducts = async (req, res) => {
     });
 
     res.json(products);
+
   } catch (error) {
     console.error("GET MY PRODUCTS ERROR:", error);
     res.status(500).json({ message: "Failed to fetch products" });
   }
 };
 
-// ---------------- GET ALL PRODUCTS (PUBLIC) ----------------
+// ---------------- GET ALL PRODUCTS ----------------
 exports.getAllProducts = async (req, res) => {
-  const products = await Product.findAll({
-    include: {
-      model: Shop,
-      where: { status: "APPROVED" },
-      attributes: ["name"]
-    }
-  });
+  try {
+    const products = await Product.findAll({
+      include: {
+        model: Shop,
+        where: { status: "APPROVED" },
+        attributes: ["name"]
+      }
+    });
 
-  res.json(products);
+    res.json(products);
+
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch products" });
+  }
+};
+
+// ---------------- GET RECOMMENDED PRODUCTS ----------------
+exports.getRecommendedProducts = async (req, res) => {
+  try {
+    const { tags } = req.body;
+
+    if (!tags || !Array.isArray(tags)) {
+      return res.status(400).json({
+        message: "Tags array is required"
+      });
+    }
+
+    const products = await Product.findAll({
+      where: {
+        [Op.or]: tags.map(tag => ({
+          name: {
+            [Op.like]: `%${tag}%`
+          }
+        }))
+      },
+      include: {
+        model: Shop,
+        where: { status: "APPROVED" },
+        attributes: ["name"]
+      }
+    });
+
+    res.json(products);
+
+  } catch (error) {
+    console.error("RECOMMENDATION ERROR:", error);
+    res.status(500).json({
+      message: "Failed to fetch recommended products"
+    });
+  }
 };

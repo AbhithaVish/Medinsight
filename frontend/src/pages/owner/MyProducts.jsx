@@ -3,230 +3,335 @@ import api, { BASE_URL } from "../../api/axios";
 import DashboardLayout from "../../components/DashboardLayout";
 
 export default function MyProducts() {
-  const [products, setProducts] = useState([]);
-  const [editingId, setEditingId] = useState(null);
-  const [editForm, setEditForm] = useState({});
-  const [uploading, setUploading] = useState(null);
 
-  const loadProducts = async () => {
-    const res = await api.get("/products/my");
+  const [products,setProducts]=useState([]);
+  const [filtered,setFiltered]=useState([]);
+
+  const [editingId,setEditingId]=useState(null);
+  const [editForm,setEditForm]=useState({});
+  const [uploading,setUploading]=useState(null);
+
+  /* FILTER STATES */
+  const [search,setSearch]=useState("");
+  const [sort,setSort]=useState("");
+  const [inStock,setInStock]=useState(false);
+
+  useEffect(()=>{ loadProducts(); },[]);
+
+  const loadProducts=async()=>{
+    const res=await api.get("/products/my");
     setProducts(res.data);
+    setFiltered(res.data);
   };
 
-  useEffect(() => {
-    loadProducts();
-  }, []);
+  /* ================= FILTER LOGIC ================= */
 
-  const uploadImage = async (id, file) => {
-    const data = new FormData();
-    data.append("image", file);
+  useEffect(()=>{
+
+    let result=[...products];
+
+    if(search)
+      result=result.filter(p =>
+        p.name.toLowerCase().includes(search.toLowerCase())
+      );
+
+    if(inStock)
+      result=result.filter(p=>p.stock>0);
+
+    if(sort==="priceLow")
+      result.sort((a,b)=>a.price-b.price);
+
+    if(sort==="priceHigh")
+      result.sort((a,b)=>b.price-a.price);
+
+    if(sort==="stock")
+      result.sort((a,b)=>b.stock-a.stock);
+
+    setFiltered(result);
+
+  },[search,sort,inStock,products]);
+
+
+
+  /* ================= IMAGE ================= */
+
+  const uploadImage=async(id,file)=>{
+    const data=new FormData();
+    data.append("image",file);
+
     setUploading(id);
-    await api.post(`/products/${id}/image`, data);
+    await api.post(`/products/${id}/image`,data);
     setUploading(null);
+
     loadProducts();
   };
 
-  const saveEdit = async id => {
-    await api.put(`/products/${id}`, editForm);
+  const saveEdit=async(id)=>{
+    await api.put(`/products/${id}`,editForm);
     setEditingId(null);
     loadProducts();
   };
 
+  const deleteProduct=async(id)=>{
+    if(!window.confirm("Delete this product?")) return;
+    await api.delete(`/products/${id}`);
+    loadProducts();
+  };
+
+  const stockBadge=stock=>({
+    padding:"4px 10px",
+    borderRadius:"999px",
+    fontSize:"12px",
+    background:stock>0?"#dcfce7":"#fee2e2",
+    color:stock>0?"#166534":"#991b1b"
+  });
+
   return (
-    <DashboardLayout title="My Products">
-      {products.length === 0 && (
-        <p style={{ color: "#6b7280" }}>No products added yet</p>
-      )}
+    <DashboardLayout title="Manage Products">
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-          gap: 24
-        }}
-      >
-        {products.map(p => (
-          <div
-            key={p.id}
-            style={{
-              background: "#fff",
-              borderRadius: 16,
-              padding: 16,
-              boxShadow: "0 10px 25px rgba(0,0,0,0.06)"
-            }}
-          >
+      {/* ================= FILTER BAR ================= */}
+
+      <div style={filterBar}>
+
+        <input
+          placeholder="Search product..."
+          style={input}
+          onChange={e=>setSearch(e.target.value)}
+        />
+
+        <select
+          style={input}
+          onChange={e=>setSort(e.target.value)}
+        >
+          <option value="">Sort</option>
+          <option value="priceLow">Price Low → High</option>
+          <option value="priceHigh">Price High → Low</option>
+          <option value="stock">Stock Level</option>
+        </select>
+
+        <label>
+          <input
+            type="checkbox"
+            onChange={e=>setInStock(e.target.checked)}
+          />
+          {" "} In Stock Only
+        </label>
+
+      </div>
+
+
+      {/* ================= GRID ================= */}
+
+      <div style={grid}>
+
+        {filtered.map(p=>(
+          <div key={p.id} style={card}>
+
             {/* IMAGE */}
-            {p.image ? (
-              <img
-                src={`${BASE_URL}/uploads/${p.image}`}
-                alt={p.name}
-                style={{
-                  width: "100%",
-                  height: 170,
-                  objectFit: "cover",
-                  borderRadius: 12,
-                  marginBottom: 10
-                }}
-              />
-            ) : (
-              <div
-                style={{
-                  height: 170,
-                  background: "#f3f4f6",
-                  borderRadius: 12,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#9ca3af",
-                  marginBottom: 10
-                }}
-              >
-                No Image
-              </div>
-            )}
+            <div style={imageWrapper}>
 
-            {/* IMAGE UPLOAD */}
-            <label
-              style={{
-                display: "block",
-                fontSize: 13,
-                color: "#6b7280",
-                marginBottom: 6
-              }}
-            >
-              Update image
-            </label>
+              {p.image
+                ? <img src={`${BASE_URL}/uploads/${p.image}`} style={image}/>
+                : <div style={noImage}>No Image</div>
+              }
 
-            <input
-              type="file"
-              accept="image/*"
-              disabled={uploading === p.id}
-              onChange={e => uploadImage(p.id, e.target.files[0])}
-              style={{ marginBottom: 10 }}
-            />
-
-            {uploading === p.id && (
-              <p style={{ fontSize: 12, color: "#2563eb" }}>
-                Uploading image...
-              </p>
-            )}
-
-            {/* EDIT MODE */}
-            {editingId === p.id ? (
-              <>
+              <label style={uploadOverlay}>
+                📷
                 <input
+                  hidden
+                  type="file"
+                  onChange={e=>uploadImage(p.id,e.target.files[0])}
+                />
+              </label>
+
+              {uploading===p.id &&
+                <span style={uploadTag}>Uploading...</span>}
+            </div>
+
+
+            {/* EDIT */}
+            {editingId===p.id ? (
+
+              <>
+                <input style={input}
                   value={editForm.name}
-                  onChange={e =>
-                    setEditForm({ ...editForm, name: e.target.value })
-                  }
-                  style={inputStyle}
+                  onChange={e=>setEditForm({...editForm,name:e.target.value})}
                 />
 
-                <input
+                <input style={input}
                   type="number"
                   value={editForm.price}
-                  onChange={e =>
-                    setEditForm({ ...editForm, price: e.target.value })
-                  }
-                  style={inputStyle}
+                  onChange={e=>setEditForm({...editForm,price:e.target.value})}
                 />
 
-                <input
+                <input style={input}
                   type="number"
                   value={editForm.stock}
-                  onChange={e =>
-                    setEditForm({ ...editForm, stock: e.target.value })
-                  }
-                  style={inputStyle}
+                  onChange={e=>setEditForm({...editForm,stock:e.target.value})}
                 />
 
-                <div style={{ display: "flex", gap: 10 }}>
-                  <button style={primaryBtn} onClick={() => saveEdit(p.id)}>
-                    Save
-                  </button>
-                  <button
-                    style={secondaryBtn}
-                    onClick={() => setEditingId(null)}
-                  >
-                    Cancel
-                  </button>
+                <div style={btnRow}>
+                  <button style={saveBtn}
+                    onClick={()=>saveEdit(p.id)}>Save</button>
+
+                  <button style={cancelBtn}
+                    onClick={()=>setEditingId(null)}>Cancel</button>
                 </div>
               </>
-            ) : (
+
+            ):(
               <>
-                {/* VIEW MODE */}
-                <h3 style={{ margin: "8px 0" }}>{p.name}</h3>
-                <p style={{ margin: 0, color: "#374151" }}>
-                  Rs. {p.price}
-                </p>
-                <p style={{ margin: "4px 0", color: "#6b7280" }}>
-                  Stock: {p.stock}
+                <h3>{p.name}</h3>
+
+                <p style={price}>
+                  Rs. {Number(p.price).toLocaleString()}
                 </p>
 
-                <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
-                  <button
-                    style={primaryBtn}
-                    onClick={() => {
+                <span style={stockBadge(p.stock)}>
+                  {p.stock>0
+                    ?`${p.stock} In Stock`
+                    :"Out of Stock"}
+                </span>
+
+                <div style={btnRow}>
+                  <button style={editBtn}
+                    onClick={()=>{
                       setEditingId(p.id);
                       setEditForm(p);
-                    }}
-                  >
+                    }}>
                     Edit
                   </button>
 
-                  <button
-                    style={dangerBtn}
-                    onClick={() =>
-                      api.delete(`/products/${p.id}`).then(loadProducts)
-                    }
-                  >
+                  <button style={deleteBtn}
+                    onClick={()=>deleteProduct(p.id)}>
                     Delete
                   </button>
                 </div>
               </>
             )}
+
           </div>
         ))}
+
       </div>
+
     </DashboardLayout>
   );
 }
 
-/* ---------- STYLES ---------- */
 
-const inputStyle = {
-  width: "100%",
-  padding: "10px 12px",
-  borderRadius: 10,
-  border: "1px solid #d1d5db",
-  marginBottom: 10
+/* ================= STYLES ================= */
+
+const filterBar={
+  display:"flex",
+  gap:"15px",
+  marginBottom:"25px",
+  background:"#fff",
+  padding:"15px",
+  borderRadius:"12px",
+  boxShadow:"0 10px 25px rgba(0,0,0,0.05)"
 };
 
-const primaryBtn = {
-  flex: 1,
-  padding: "10px",
-  borderRadius: 10,
-  background: "#2563eb",
-  color: "#fff",
-  border: "none",
-  fontWeight: 600
+const grid={
+  display:"grid",
+  gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",
+  gap:"25px"
 };
 
-const secondaryBtn = {
-  flex: 1,
-  padding: "10px",
-  borderRadius: 10,
-  background: "#e5e7eb",
-  color: "#111827",
-  border: "none"
+const card={
+  background:"#fff",
+  padding:"18px",
+  borderRadius:"16px",
+  boxShadow:"0 15px 35px rgba(0,0,0,0.05)"
 };
 
-const dangerBtn = {
-  flex: 1,
-  padding: "10px",
-  borderRadius: 10,
-  background: "#ef4444",
-  color: "#fff",
-  border: "none",
-  fontWeight: 600
+const imageWrapper={position:"relative"};
+
+const image={
+  width:"100%",
+  height:"190px",
+  objectFit:"cover",
+  borderRadius:"12px"
+};
+
+const noImage={
+  height:"190px",
+  background:"#f1f5f9",
+  borderRadius:"12px",
+  display:"flex",
+  alignItems:"center",
+  justifyContent:"center"
+};
+
+const uploadOverlay={
+  position:"absolute",
+  right:10,
+  bottom:10,
+  background:"#2563eb",
+  color:"#fff",
+  padding:"8px",
+  borderRadius:"50%",
+  cursor:"pointer"
+};
+
+const uploadTag={
+  position:"absolute",
+  top:10,
+  left:10,
+  background:"#000",
+  color:"#fff",
+  padding:"4px 8px",
+  borderRadius:"6px"
+};
+
+const input={
+  padding:"10px",
+  borderRadius:"8px",
+  border:"1px solid #e2e8f0"
+};
+
+const price={
+  fontWeight:"700",
+  color:"#2563eb"
+};
+
+const btnRow={
+  display:"flex",
+  gap:"10px",
+  marginTop:"12px"
+};
+
+const editBtn={
+  flex:1,
+  background:"#2563eb",
+  color:"#fff",
+  border:"none",
+  padding:"10px",
+  borderRadius:"8px"
+};
+
+const saveBtn={
+  flex:1,
+  background:"#16a34a",
+  color:"#fff",
+  border:"none",
+  padding:"10px",
+  borderRadius:"8px"
+};
+
+const cancelBtn={
+  flex:1,
+  background:"#e2e8f0",
+  border:"none",
+  padding:"10px",
+  borderRadius:"8px"
+};
+
+const deleteBtn={
+  flex:1,
+  background:"#ef4444",
+  color:"#fff",
+  border:"none",
+  padding:"10px",
+  borderRadius:"8px"
 };

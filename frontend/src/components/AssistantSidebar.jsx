@@ -1,4 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
+import "./AssistantSidebar.css";
 
 export default function AssistantSidebar() {
   const navigate = useNavigate();
@@ -9,37 +10,23 @@ export default function AssistantSidebar() {
   };
 
   return (
-    <aside
-      style={{
-        width: 260,
-        minHeight: "100vh",
-        background: "#0f172a",
-        color: "#fff",
-        padding: 20
-      }}
-    >
-      <h2 style={{ marginBottom: 30, color: "#38bdf8" }}>
-        🏥 Assistant
-      </h2>
+    <aside className="assistant-sidebar">
 
-      <NavItem to="/assistants/dashboard" label="Dashboard" />
-      <NavItem to="/assistants/profile" label="My Profile" />
-      <NavItem to="/assistants" label="Public Listing" />
+      <div className="sidebar-logo">
+        🏥 CareConnect
+      </div>
 
-      <button
-        onClick={logout}
-        style={{
-          marginTop: 40,
-          width: "100%",
-          padding: "12px",
-          borderRadius: 10,
-          border: "none",
-          background: "#ef4444",
-          color: "#fff"
-        }}
-      >
-        Logout
-      </button>
+      <nav className="sidebar-menu">
+        <NavItem to="/assistants/dashboard" label="Dashboard" />
+        <NavItem to="/assistants/profile" label="My Profile" />
+        <NavItem to="/assistants" label="Public Listing" />
+      </nav>
+      <div className="sidebar-bottom">
+        <button className="logout-btn" onClick={logout}>
+          Logout
+        </button>
+      </div>
+
     </aside>
   );
 }
@@ -48,15 +35,9 @@ function NavItem({ to, label }) {
   return (
     <NavLink
       to={to}
-      style={({ isActive }) => ({
-        display: "block",
-        padding: "12px 14px",
-        marginBottom: 10,
-        borderRadius: 10,
-        color: "#fff",
-        textDecoration: "none",
-        background: isActive ? "#1e293b" : "transparent"
-      })}
+      className={({ isActive }) =>
+        isActive ? "menu-item active" : "menu-item"
+      }
     >
       {label}
     </NavLink>

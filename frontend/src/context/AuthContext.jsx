@@ -1,41 +1,48 @@
-import { createContext, useState } from "react";
+import { createContext, useState, useEffect } from "react";
+import api from "../api/axios";
 
-export const AuthContext = createContext(null);
+export const AuthContext = createContext();
 
-export const AuthProvider = ({ children }) => {
-  // ✅ LAZY INITIALIZATION (BEST PRACTICE)
-  const [user, setUser] = useState(() => {
-    try {
-      const token = localStorage.getItem("token");
-      const role = localStorage.getItem("role");
+export function AuthProvider({ children }) {
 
-      if (token && role) {
-        return { token, role };
-      }
-      return null;
-    } catch (error) {
-      console.error("Auth init error:", error);
-      return null;
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      setLoading(false);
+      return;
     }
-  });
 
-  // ✅ LOGIN
-  const login = (token, role) => {
+    api.get("/auth/me")
+      .then(res => {
+        setUser(res.data);
+      })
+      .catch(() => {
+        localStorage.removeItem("token");
+      })
+      .finally(() => setLoading(false));
+
+  }, []);
+
+  const login = (token, user) => {
     localStorage.setItem("token", token);
-    localStorage.setItem("role", role);
-    setUser({ token, role });
+    setUser(user);
   };
 
-  // ✅ LOGOUT
   const logout = () => {
     localStorage.removeItem("token");
-    localStorage.removeItem("role");
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider
+      value={{ user, login, logout, loading }}
+    >
       {children}
     </AuthContext.Provider>
   );
-};
+}
