@@ -364,7 +364,7 @@ http://localhost:8000
 
 # 📌 Version
 
-**v1.0.0 – Initial Stable Release**
+**Version2.0.0 – Final Version of MedInsight**
 
 ---
 
