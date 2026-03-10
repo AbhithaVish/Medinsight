@@ -142,6 +142,8 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
+        
         <Route
           path="/owner/shop"
           element={
@@ -202,43 +204,17 @@ function AppRoutes() {
         <Route path="/assistants" element={<AssistantPublicList />} />
         <Route path="/assistants/login" element={<AssistantLogin />} />
         <Route path="/assistants/register" element={<AssistantRegister />} />
-        <Route
-          path="/assistants/dashboard"
-          element={
-            <ProtectedRoute role="ASSISTANT">
-              <AssistantDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/assistants/profile"
-          element={
-            <ProtectedRoute role="ASSISTANT">
-              <AssistantProfile />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/assistants/dashboard" element={<AssistantDashboard />} />
+        <Route path="/assistants/profile" element={<AssistantProfile />} />
+       
 
         {/* ---------- CONSULTANTS ---------- */}
         <Route path="/consultants" element={<ConsultantPublicList />} />
         <Route path="/consultants/login" element={<ConsultantLogin />} />
         <Route path="/consultants/register" element={<ConsultantRegister />} />
-        <Route
-          path="/consultants/dashboard"
-          element={
-            <ProtectedRoute role="CONSULTANT">
-              <ConsultantDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/consultants/profile"
-          element={
-            <ProtectedRoute role="CONSULTANT">
-              <ConsultantProfile />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/consultants/dashboard" element={<ConsultantDashboard />} />
+       <Route path="/consultants/profile" element={<ConsultantProfile />} />
+        
       </Routes>
     </>
   );

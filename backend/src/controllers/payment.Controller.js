@@ -3,6 +3,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 const Product = require("../models/Product");
 const Order = require("../models/Order");
+const OrderItem = require("../models/OrderItem"); // ✅ FIX: Added missing model
 
 
 /* ===============================
@@ -81,7 +82,6 @@ exports.createCheckoutSession = async (req, res) => {
 };
 
 
-
 /* ===============================
    CONFIRM ORDER AFTER PAYMENT
 =================================*/
@@ -149,7 +149,43 @@ exports.confirmOrder = async (req, res) => {
       status: "PAID",
 
       stripeSessionId: session.id
+
     });
+
+    /* ===============================
+       CREATE ORDER ITEMS
+    =============================== */
+
+    let cartItems = [];
+
+    try {
+      cartItems = JSON.parse(session.metadata.cartItems || "[]");
+    } catch {
+      cartItems = [];
+    }
+
+    for (const item of cartItems) {
+
+      const product = await Product.findByPk(item.id);
+
+      if (!product) continue;
+
+      await OrderItem.create({
+        order_id: newOrder.id,
+        product_id: product.id,
+        shop_id: product.shop_id,
+        qty: item.qty,
+        price: product.price,
+        status: "PENDING"
+      });
+
+      // Reduce stock safely
+      if (product.stock >= item.qty) {
+        product.stock -= item.qty;
+        await product.save();
+      }
+
+    }
 
     return res.json({
       success: true,
@@ -164,8 +200,9 @@ exports.confirmOrder = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Error confirming order",
-      error: error.message
+        error: error.message
     });
 
   }
+
 };

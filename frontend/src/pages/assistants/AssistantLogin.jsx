@@ -1,12 +1,11 @@
-import { useState, useContext } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../../api/axios";
-import { AuthContext } from "../../context/AuthContext";
 import "./AssistantAuth.css";
 
 export default function AssistantLogin() {
+
   const navigate = useNavigate();
-  const { login } = useContext(AuthContext);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,16 +16,18 @@ export default function AssistantLogin() {
     setLoading(true);
 
     try {
+
       const res = await api.post("/assistants/login", {
         email,
         password
       });
 
-      // ✅ Store token + role
-      login(res.data.token, "ASSISTANT");
+      // store assistant token
+      localStorage.setItem("assistantToken", res.data.token);
 
-      // ✅ Redirect to assistant dashboard
+      // redirect to assistant dashboard
       navigate("/assistants/dashboard");
+
     } catch (err) {
       alert("Invalid assistant credentials");
     } finally {
@@ -37,7 +38,9 @@ export default function AssistantLogin() {
   return (
     <div className="assistant-auth-container">
       <form className="assistant-auth-card" onSubmit={submit}>
+
         <h2>Assistant Login</h2>
+
         <p className="subtitle">
           Access your hospital assistant dashboard
         </p>
@@ -72,6 +75,7 @@ export default function AssistantLogin() {
         <p className="footer" style={{ marginTop: 6 }}>
           <Link to="/">← Back to User Portal</Link>
         </p>
+
       </form>
     </div>
   );

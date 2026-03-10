@@ -10,12 +10,17 @@ export default function XrayAnalysis() {
   const [loading, setLoading] = useState(false);
 
   const analyze = async () => {
-    if (!file) return alert("Please upload an image");
+
+    if (!file) {
+      alert("Please upload an X-ray image");
+      return;
+    }
 
     setLoading(true);
     setResult(null);
 
     try {
+
       const formData = new FormData();
       formData.append("file", file);
 
@@ -39,7 +44,7 @@ export default function XrayAnalysis() {
 
       <div style={{ maxWidth: "1000px", margin: "auto", padding: "20px" }}>
 
-        {/* Upload Card */}
+        {/* Upload Section */}
         <div style={{
           background: "white",
           padding: "30px",
@@ -58,6 +63,7 @@ export default function XrayAnalysis() {
             type="file"
             accept="image/*"
             onChange={(e) => {
+
               const selectedFile = e.target.files[0];
 
               if (selectedFile) {
@@ -65,6 +71,7 @@ export default function XrayAnalysis() {
                 setPreview(URL.createObjectURL(selectedFile));
                 setResult(null);
               }
+
             }}
           />
 
@@ -90,8 +97,9 @@ export default function XrayAnalysis() {
         </div>
 
 
-        {/* Results Section */}
+        {/* RESULTS */}
         {result && (
+
           <div style={{
             background: "white",
             padding: "30px",
@@ -113,7 +121,7 @@ export default function XrayAnalysis() {
               gap: "25px"
             }}>
 
-              {/* Image Comparison */}
+              {/* ORIGINAL X-RAY */}
               <div>
 
                 <p style={{ fontWeight: "600", color: "#475569" }}>
@@ -121,6 +129,7 @@ export default function XrayAnalysis() {
                 </p>
 
                 {preview && (
+
                   <img
                     src={preview}
                     alt="Original"
@@ -131,119 +140,200 @@ export default function XrayAnalysis() {
                       border: "1px solid #e2e8f0"
                     }}
                   />
+
                 )}
 
               </div>
 
 
-              {/* Result Data */}
-              <div style={{
-                background: "#f8fafc",
-                padding: "20px",
-                borderRadius: "15px"
-              }}>
+              {/* AI HEATMAP */}
+              <div>
 
-                <div style={{ marginBottom: "15px" }}>
-                  <span style={{
-                    fontSize: "12px",
-                    color: "#64748b",
-                    textTransform: "uppercase",
-                    fontWeight: "bold"
-                  }}>
-                    Body Part
-                  </span>
-
-                  <div style={{
-                    fontSize: "20px",
-                    fontWeight: "bold"
-                  }}>
-                    {result.body_part}
-                  </div>
-                </div>
-
-
-                <div style={{ marginBottom: "15px" }}>
-                  <span style={{
-                    fontSize: "12px",
-                    color: "#64748b",
-                    textTransform: "uppercase",
-                    fontWeight: "bold"
-                  }}>
-                    Condition
-                  </span>
-
-                  <div style={{
-                    fontSize: "24px",
-                    fontWeight: "bold",
-                    color: result.condition === "fracture"
-                      ? "#dc2626"
-                      : "#16a34a"
-                  }}>
-                    {result.condition.toUpperCase()}
-                  </div>
-                </div>
-
-
-                <div style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: "10px"
-                }}>
-                  <span><strong>Confidence</strong></span>
-
-                  <span style={{
-                    color: "#2563eb",
-                    fontWeight: "bold"
-                  }}>
-                    {(result.confidence * 100).toFixed(2)}%
-                  </span>
-                </div>
-
-
-                <div style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: "10px"
-                }}>
-                  <span><strong>Risk Level</strong></span>
-
-                  <span style={{
-                    padding: "4px 10px",
-                    borderRadius: "20px",
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    background: result.risk_level === "HIGH"
-                      ? "#fee2e2"
-                      : "#dcfce7",
-                    color: result.risk_level === "HIGH"
-                      ? "#991b1b"
-                      : "#166534"
-                  }}>
-                    {result.risk_level}
-                  </span>
-                </div>
-
-
-                <hr style={{
-                  border: "0.5px solid #e2e8f0",
-                  margin: "15px 0"
-                }} />
-
-
-                <p style={{
-                  fontSize: "14px",
-                  color: "#334155",
-                  fontStyle: "italic",
-                  lineHeight: "1.6"
-                }}>
-                  "{result.summary}"
+                <p style={{ fontWeight: "600", color: "#475569" }}>
+                  AI Fracture Heatmap
                 </p>
+
+                {result.heatmap && (
+
+                  <img
+                    src={`data:image/jpeg;base64,${result.heatmap}`}
+                    alt="Heatmap"
+                    style={{
+                      width: "100%",
+                      marginTop: "10px",
+                      borderRadius: "10px",
+                      border: "1px solid #e2e8f0"
+                    }}
+                  />
+
+                )}
 
               </div>
 
             </div>
 
 
+            {/* RESULT DETAILS */}
+            <div style={{
+              marginTop: "30px",
+              background: "#f8fafc",
+              padding: "20px",
+              borderRadius: "15px"
+            }}>
+
+              {/* Body Part */}
+              <div style={{ marginBottom: "15px" }}>
+
+                <span style={{
+                  fontSize: "12px",
+                  color: "#64748b",
+                  textTransform: "uppercase",
+                  fontWeight: "bold"
+                }}>
+                  Body Part
+                </span>
+
+                <div style={{
+                  fontSize: "20px",
+                  fontWeight: "bold"
+                }}>
+                  {result.body_part}
+                </div>
+
+              </div>
+
+
+              {/* Condition */}
+              <div style={{ marginBottom: "15px" }}>
+
+                <span style={{
+                  fontSize: "12px",
+                  color: "#64748b",
+                  textTransform: "uppercase",
+                  fontWeight: "bold"
+                }}>
+                  Condition
+                </span>
+
+                <div style={{
+                  fontSize: "24px",
+                  fontWeight: "bold",
+                  color: result.condition === "fracture"
+                    ? "#dc2626"
+                    : "#16a34a"
+                }}>
+                  {result.condition.toUpperCase()}
+                </div>
+
+              </div>
+
+
+              {/* Confidence */}
+              <div style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginBottom: "10px"
+              }}>
+
+                <span><strong>Confidence</strong></span>
+
+                <span style={{
+                  color: "#2563eb",
+                  fontWeight: "bold"
+                }}>
+                  {(result.confidence * 100).toFixed(2)}%
+                </span>
+
+              </div>
+
+
+              {/* Risk Level */}
+              <div style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginBottom: "10px"
+              }}>
+
+                <span><strong>Risk Level</strong></span>
+
+                <span style={{
+                  padding: "4px 10px",
+                  borderRadius: "20px",
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  background: result.risk_level === "HIGH"
+                    ? "#fee2e2"
+                    : "#dcfce7",
+                  color: result.risk_level === "HIGH"
+                    ? "#991b1b"
+                    : "#166534"
+                }}>
+                  {result.risk_level}
+                </span>
+
+              </div>
+
+
+              <hr style={{
+                border: "0.5px solid #e2e8f0",
+                margin: "15px 0"
+              }} />
+
+
+              {/* SUMMARY */}
+              <p style={{
+                fontSize: "14px",
+                color: "#334155",
+                fontStyle: "italic",
+                lineHeight: "1.6"
+              }}>
+                "{result.summary}"
+              </p>
+
+
+              {/* PRODUCT RECOMMENDATIONS */}
+              {result.recommended_tags && result.recommended_tags.length > 0 && (
+
+                <div style={{ marginTop: "20px" }}>
+
+                  <h4 style={{ marginBottom: "10px" }}>
+                    Recommended Support Products
+                  </h4>
+
+                  <div style={{
+                    display: "flex",
+                    gap: "10px",
+                    flexWrap: "wrap"
+                  }}>
+
+                    {result.recommended_tags.map((tag, index) => (
+
+                      <span
+                        key={index}
+                        style={{
+                          padding: "6px 12px",
+                          background: "#e0f2fe",
+                          color: "#0369a1",
+                          borderRadius: "20px",
+                          fontSize: "12px",
+                          fontWeight: "bold"
+                        }}
+                      >
+                        {tag}
+                      </span>
+
+                    ))}
+
+                  </div>
+
+                </div>
+
+              )}
+
+            </div>
+
+
+            {/* Disclaimer */}
             <p style={{
               marginTop: "20px",
               fontSize: "11px",
@@ -255,6 +345,7 @@ export default function XrayAnalysis() {
             </p>
 
           </div>
+
         )}
 
       </div>

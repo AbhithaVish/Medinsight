@@ -1,19 +1,66 @@
 import DashboardLayout from "../../components/DashboardLayout";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import axios from "axios";
 
 export default function OwnerDashboard() {
 
   const navigate = useNavigate();
+
+  const [stats, setStats] = useState({
+    totalSales: 0,
+    totalOrders: 0,
+    totalProducts: 0,
+    pendingOrders: 0
+  });
+
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+
+        const res = await axios.get(
+          "http://localhost:5000/api/owner/stats/1"
+        );
+
+        setStats(res.data);
+
+      } catch (err) {
+        console.error("Failed to load dashboard stats:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
 
   return (
     <DashboardLayout title="Shop Owner Dashboard">
 
       {/* ================= STATS ================= */}
       <div style={styles.statsGrid}>
-        <StatCard title="Total Sales" value="Rs. 125,000" color="#22c55e" />
-        <StatCard title="Orders" value="320" color="#2563eb" />
-        <StatCard title="Products" value="58" color="#f59e0b" />
-        <StatCard title="Pending" value="12" color="#ef4444" />
+        <StatCard
+          title="Total Sales"
+          value={loading ? "..." : `Rs. ${stats.totalSales}`}
+          color="#22c55e"
+        />
+        <StatCard
+          title="Orders"
+          value={loading ? "..." : stats.totalOrders}
+          color="#2563eb"
+        />
+        <StatCard
+          title="Products"
+          value={loading ? "..." : stats.totalProducts}
+          color="#f59e0b"
+        />
+        <StatCard
+          title="Pending"
+          value={loading ? "..." : stats.pendingOrders}
+          color="#ef4444"
+        />
       </div>
 
 
@@ -71,8 +118,8 @@ export default function OwnerDashboard() {
 
           <ul style={styles.performance}>
             <li>⭐ Rating: <b>4.7</b></li>
-            <li>📦 Delivered Orders: <b>290</b></li>
-            <li>🚚 Pending Orders: <b>12</b></li>
+            <li>📦 Delivered Orders: <b>{stats.totalOrders}</b></li>
+            <li>🚚 Pending Orders: <b>{stats.pendingOrders}</b></li>
             <li>👥 Customers: <b>180</b></li>
           </ul>
 
@@ -110,7 +157,6 @@ function ActionCard({ title, desc, onClick }) {
 
 const styles = {
 
-  /* ===== STATS ===== */
   statsGrid:{
     display:"grid",
     gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",
@@ -125,7 +171,6 @@ const styles = {
     boxShadow:"0 10px 25px rgba(0,0,0,0.05)"
   },
 
-  /* ===== ACTIONS ===== */
   actionsGrid:{
     display:"grid",
     gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))",
@@ -142,7 +187,6 @@ const styles = {
     boxShadow:"0 10px 25px rgba(0,0,0,0.05)"
   },
 
-  /* ===== ANALYTICS ===== */
   analyticsWrapper:{
     display:"grid",
     gridTemplateColumns:"2fr 1fr",
@@ -156,7 +200,6 @@ const styles = {
     boxShadow:"0 10px 25px rgba(0,0,0,0.05)"
   },
 
-  /* ===== FAKE CHART ===== */
   fakeChart:{
     display:"flex",
     alignItems:"flex-end",
@@ -171,7 +214,6 @@ const styles = {
     borderRadius:"6px"
   },
 
-  /* ===== PERFORMANCE ===== */
   performance:{
     listStyle:"none",
     padding:0,
